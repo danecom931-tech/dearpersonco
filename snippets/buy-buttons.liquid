@@ -189,19 +189,42 @@ Supported variables
         var t = priceTargets()[0];
         return t ? amt(t.getAttribute('data-base-price')) : NaN;
       }
+      function barPrice(bar) {
+        if (!bar) return '';
+        var pe = bar.querySelector(PRICE_SEL);
+        if (!pe) return '';
+        var clone = pe.cloneNode(true);
+        var full = clone.querySelectorAll(FULL_PRICE_SEL);
+        for (var i = 0; i < full.length; i++) { full[i].parentNode.removeChild(full[i]); }
+        return norm(clone.textContent);
+      }
+      // Is the 1-pc base price a legitimately selectable bundle (i.e. does any bar
+      // cost exactly the base price)? If not, the base price is *never* a real
+      // value and can be suppressed unconditionally. Latches true once seen, so a
+      // mid-transition where all bars briefly read the base price can't flip it.
+      var baseLegitLatched = false;
+      function baseLegit() {
+        if (baseLegitLatched) return true;
+        var base = baseAmt(); if (isNaN(base)) return false;
+        var list = barList();
+        for (var i = 0; i < list.length; i++) {
+          if (Math.abs(amt(barPrice(list[i])) - base) < 0.005) { baseLegitLatched = true; return true; }
+        }
+        return false;
+      }
       function paint(txt) {
         var ts = priceTargets();
         for (var i = 0; i < ts.length; i++) { ts[i].textContent = txt; }
       }
       // Paint the selected price, but skip Kaching's transient 1-pc value.
       // On a bundle/variant change Kaching holds the 1-pc base price for ~1-2s
-      // while it recalculates; that value equals the base variant price. So while
-      // any non-first bundle is selected, ignore a reading that matches the base
-      // price and wait for the settled bundle total. Returns true once painted.
+      // while it recalculates. Suppress a reading equal to the base price unless
+      // the 1-pc price is a real bundle AND that first bundle is the one selected.
       function trySync() {
         var price = selectedPrice(); if (!price) return false;
         var base = baseAmt();
-        if (selectedIndex() !== 0 && !isNaN(base) && Math.abs(amt(price) - base) < 0.005) return false;
+        var isBase = !isNaN(base) && Math.abs(amt(price) - base) < 0.005;
+        if (isBase && (!baseLegit() || selectedIndex() !== 0)) return false;
         paint(price);
         return true;
       }
