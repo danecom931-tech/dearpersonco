@@ -198,33 +198,69 @@ Supported variables
         for (var i = 0; i < full.length; i++) { full[i].parentNode.removeChild(full[i]); }
         return norm(clone.textContent);
       }
-      // Is the 1-pc base price a legitimately selectable bundle (i.e. does any bar
-      // cost exactly the base price)? If not, the base price is *never* a real
-      // value and can be suppressed unconditionally. Latches true once seen, so a
-      // mid-transition where all bars briefly read the base price can't flip it.
-      var baseLegitLatched = false;
-      function baseLegit() {
-        if (baseLegitLatched) return true;
-        var base = baseAmt(); if (isNaN(base)) return false;
-        var list = barList();
-        for (var i = 0; i < list.length; i++) {
-          if (Math.abs(amt(barPrice(list[i])) - base) < 0.005) { baseLegitLatched = true; return true; }
+      // Kaching's deal-block config tells us each bar's true item count, so the
+      // fix doesn't depend on bar order. Cached once parsed.
+      var _cfg = null;
+      function dealConfig() {
+        if (_cfg) return _cfg;
+        var el = document.querySelector('kaching-bundles-block');
+        if (el) { try { _cfg = JSON.parse(el.getAttribute('deal-block')); } catch (e) {} }
+        return _cfg;
+      }
+      function barQty(db) {
+        if (!db) return 1;
+        if (db.dealBarType === 'bxgy') return (db.buyQuantity || 0) + (db.getQuantity || 0);
+        return db.quantity || 1;
+      }
+      function selectedBarId() {
+        var bar = selectedBar();
+        if (bar && bar.getAttribute('data-deal-bar-id')) return bar.getAttribute('data-deal-bar-id');
+        var b = bars();
+        var radio = b && b.querySelector('input[type="radio"]:checked');
+        return radio ? radio.value : null;
+      }
+      // Total item count of the selected bundle (Buy 2 Get 1 Free = 3).
+      function selectedQty() {
+        var cfg = dealConfig(); if (!cfg || !cfg.dealBars) return 1;
+        var id = selectedBarId();
+        for (var i = 0; i < cfg.dealBars.length; i++) {
+          if (cfg.dealBars[i].id === id) return barQty(cfg.dealBars[i]);
         }
-        return false;
+        return 1;
+      }
+      // Single-unit price: the live price of the qty-1 bar if present, otherwise
+      // the base variant price stamped on the button. This is the transient value
+      // Kaching flashes while recalculating a multi-item bundle.
+      function singleUnitAmt() {
+        var cfg = dealConfig();
+        var list = barList();
+        if (cfg && cfg.dealBars) {
+          for (var i = 0; i < list.length; i++) {
+            var id = list[i].getAttribute('data-deal-bar-id');
+            for (var j = 0; j < cfg.dealBars.length; j++) {
+              if (cfg.dealBars[j].id === id && barQty(cfg.dealBars[j]) === 1) {
+                var p = amt(barPrice(list[i]));
+                if (!isNaN(p)) return p;
+              }
+            }
+          }
+        }
+        return baseAmt();
       }
       function paint(txt) {
         var ts = priceTargets();
         for (var i = 0; i < ts.length; i++) { ts[i].textContent = txt; }
       }
-      // Paint the selected price, but skip Kaching's transient 1-pc value.
-      // On a bundle/variant change Kaching holds the 1-pc base price for ~1-2s
-      // while it recalculates. Suppress a reading equal to the base price unless
-      // the 1-pc price is a real bundle AND that first bundle is the one selected.
+      // Paint the selected bundle price, but skip Kaching's transient single-unit
+      // value. When a multi-item bundle is selected, Kaching briefly resets its
+      // price to the 1-unit price while recalculating; ignore any reading equal to
+      // the single-unit price and wait for the settled bundle total.
       function trySync() {
         var price = selectedPrice(); if (!price) return false;
-        var base = baseAmt();
-        var isBase = !isNaN(base) && Math.abs(amt(price) - base) < 0.005;
-        if (isBase && (!baseLegit() || selectedIndex() !== 0)) return false;
+        if (selectedQty() > 1) {
+          var one = singleUnitAmt();
+          if (!isNaN(one) && Math.abs(amt(price) - one) < 0.005) return false;
+        }
         paint(price);
         return true;
       }
