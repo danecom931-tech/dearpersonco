@@ -36,26 +36,19 @@ Supported variables
   {%- assign button_size = button_size | default: 'xl' -%}
 
   {%- comment -%}
-    Comfrt-style Add to Cart: variant price shown next to the label, with the
-    stock status on a second line underneath. To change the wording, edit
-    `atc_in_stock_text` below. NOTE: this price is the product/variant price,
-    not a bundle-app total.
+    Add to Cart button with a stock-status line underneath the label.
+    To change the wording, edit `atc_in_stock_text` below.
   {%- endcomment -%}
   {%- assign atc_in_stock_text = 'In-Stock: Ready to Ship' -%}
-  {%- assign atc_variant = product.selected_or_first_available_variant -%}
-  {%- assign atc_price = '' -%}
-  {%- if atc_variant != nil -%}
-    {%- assign atc_price = atc_variant.price | money -%}
-  {%- endif -%}
 
   {%- if product.selected_or_first_available_variant == nil -%}
     {%- capture button_content -%}{{ 'product.general.unavailable_button' | t }}{%- endcapture -%}
     {%- assign button_disabled = true -%}
   {%- elsif product.selected_or_first_available_variant.available -%}
     {%- if product.template_suffix contains 'pre-order' -%}
-      {%- capture button_content -%}<span class="atc-multiline"><span class="atc-multiline__main">{{ 'product.general.pre_order_button' | t }} - <span class="atc-multiline__price" data-base-price="{{ atc_price | strip_html | escape }}">{{ atc_price }}</span></span></span>{%- endcapture -%}
+      {%- capture button_content -%}{{ 'product.general.pre_order_button' | t }}{%- endcapture -%}
     {%- else -%}
-      {%- capture button_content -%}<span class="atc-multiline"><span class="atc-multiline__main">{{ 'product.general.add_to_cart_button' | t }} - <span class="atc-multiline__price" data-base-price="{{ atc_price | strip_html | escape }}">{{ atc_price }}</span></span><span class="atc-multiline__status">{{ atc_in_stock_text }}</span></span>{%- endcapture -%}
+      {%- capture button_content -%}<span class="atc-multiline"><span class="atc-multiline__main">{{ 'product.general.add_to_cart_button' | t }}</span><span class="atc-multiline__status">{{ atc_in_stock_text }}</span></span>{%- endcapture -%}
     {%- endif -%}
   {%- else -%}
     {%- capture button_content -%}{{ 'product.general.sold_out_button' | t }}{%- endcapture -%}
@@ -63,7 +56,7 @@ Supported variables
   {%- endif -%}
 
   <style>
-    /* Comfrt-style two-line ATC button (label + price on top, stock status below). */
+    /* Two-line ATC button: label on top, stock status below. */
     .buy-buttons .button:has(.atc-multiline) {
       height: auto;
       padding-block: 0.9rem;
@@ -136,219 +129,4 @@ Supported variables
     </buy-buttons>
   </div>
 
-  {%- comment -%}
-    Kaching Bundles bridge: mirror the selected bundle's price onto the ATC
-    button's `.atc-multiline__price`. Harmless if Kaching isn't on the page —
-    it simply leaves the variant price rendered above. Reads Kaching's own DOM
-    (`.kaching-bundles__bars` / `--selected` / `.kaching-bundles__bar-price`).
-  {%- endcomment -%}
-  <script>
-    (function () {
-      if (window.__dpcKachingAtcBridge) return;
-      window.__dpcKachingAtcBridge = true;
-
-      var PRICE_SEL = '.kaching-bundles__bar-price,[data-a11y-label="system.price"]';
-      // Kaching nests the struck-through full price inside the price node; strip it
-      // so the button shows only the sale price (Comfrt-style, single price).
-      var FULL_PRICE_SEL = '.kaching-bundles__bar-full-price,[data-a11y-label="system.original_price"]';
-
-      function norm(s) { return (s || '').replace(/\s+/g, ' ').trim(); }
-      // Parse a money string to a number (USD-style: comma = thousands). Lets
-      // "$35" and "$35.00" compare equal.
-      function amt(s) {
-        var m = norm(s).match(/[\d.,]+/);
-        return m ? parseFloat(m[0].replace(/,/g, '')) : NaN;
-      }
-      function bars() {
-        return document.querySelector('.kaching-bundles__bars') || document.querySelector('kaching-bundle');
-      }
-      function barList() {
-        var b = bars();
-        return b ? Array.prototype.slice.call(b.querySelectorAll('.kaching-bundles__bar')) : [];
-      }
-      function selectedBar() {
-        var b = bars(); if (!b) return null;
-        var sel = b.querySelector('.kaching-bundles__bar--selected');
-        if (sel) return sel;
-        var radio = b.querySelector('input[type="radio"]:checked');
-        if (radio) return radio.closest('.kaching-bundles__bar') || b;
-        return b.querySelector('.kaching-bundles__bar') || b;
-      }
-      function selectedIndex() { return barList().indexOf(selectedBar()); }
-      function selectedPrice() {
-        var s = selectedBar() || bars(); if (!s) return '';
-        var pe = s.querySelector(PRICE_SEL);
-        if (!pe) return '';
-        var clone = pe.cloneNode(true);
-        var full = clone.querySelectorAll(FULL_PRICE_SEL);
-        for (var i = 0; i < full.length; i++) { full[i].parentNode.removeChild(full[i]); }
-        return norm(clone.textContent);
-      }
-      function priceTargets() { return document.querySelectorAll('.atc-multiline__price'); }
-      function baseAmt() {
-        var t = priceTargets()[0];
-        return t ? amt(t.getAttribute('data-base-price')) : NaN;
-      }
-      function barPrice(bar) {
-        if (!bar) return '';
-        var pe = bar.querySelector(PRICE_SEL);
-        if (!pe) return '';
-        var clone = pe.cloneNode(true);
-        var full = clone.querySelectorAll(FULL_PRICE_SEL);
-        for (var i = 0; i < full.length; i++) { full[i].parentNode.removeChild(full[i]); }
-        return norm(clone.textContent);
-      }
-      // Kaching's deal-block config tells us each bar's true item count, so the
-      // fix doesn't depend on bar order. Cached once parsed.
-      var _cfg = null;
-      function dealConfig() {
-        if (_cfg) return _cfg;
-        var el = document.querySelector('kaching-bundles-block');
-        if (el) { try { _cfg = JSON.parse(el.getAttribute('deal-block')); } catch (e) {} }
-        return _cfg;
-      }
-      function barQty(db) {
-        if (!db) return 1;
-        if (db.dealBarType === 'bxgy') return (db.buyQuantity || 0) + (db.getQuantity || 0);
-        return db.quantity || 1;
-      }
-      function selectedBarId() {
-        var bar = selectedBar();
-        if (bar && bar.getAttribute('data-deal-bar-id')) return bar.getAttribute('data-deal-bar-id');
-        var b = bars();
-        var radio = b && b.querySelector('input[type="radio"]:checked');
-        return radio ? radio.value : null;
-      }
-      // Total item count of the selected bundle (Buy 2 Get 1 Free = 3).
-      function selectedQty() {
-        var cfg = dealConfig(); if (!cfg || !cfg.dealBars) return 1;
-        var id = selectedBarId();
-        for (var i = 0; i < cfg.dealBars.length; i++) {
-          if (cfg.dealBars[i].id === id) return barQty(cfg.dealBars[i]);
-        }
-        return 1;
-      }
-      // Single-unit price: the live price of the qty-1 bar if present, otherwise
-      // the base variant price stamped on the button. This is the transient value
-      // Kaching flashes while recalculating a multi-item bundle.
-      function singleUnitAmt() {
-        // Prefer the stamped base variant price — it's stable through re-renders.
-        var b = baseAmt();
-        if (!isNaN(b)) return b;
-        var cfg = dealConfig();
-        var list = barList();
-        if (cfg && cfg.dealBars) {
-          for (var i = 0; i < list.length; i++) {
-            var id = list[i].getAttribute('data-deal-bar-id');
-            for (var j = 0; j < cfg.dealBars.length; j++) {
-              if (cfg.dealBars[j].id === id && barQty(cfg.dealBars[j]) === 1) {
-                var p = amt(barPrice(list[i]));
-                if (!isNaN(p)) return p;
-              }
-            }
-          }
-        }
-        return NaN;
-      }
-      // Only sync while the widget is in its settled, loaded state.
-      function isLoaded() {
-        var b = document.querySelector('.kaching-bundles__block');
-        return !b || b.classList.contains('kaching-bundles__block--loaded');
-      }
-      // Track the selected bar id ourselves. It only changes when a bundle radio
-      // changes, NOT when a color/size select changes — so it stays correct even
-      // while Kaching re-renders (morphs) the widget during recalculation, which
-      // is exactly when the selected bar briefly loses its markers.
-      var currentBarId = null;
-      // Items the shopper actually pays for (bxgy: buyQuantity; quantity-break:
-      // quantity). Structural config, so it's reliable even though the config's
-      // price fields can be stale. Used to suppress the single-unit transient and
-      // to compute the expected total as base x paidQty.
-      function paidQtyById(id) {
-        var cfg = dealConfig(); if (!cfg || !cfg.dealBars) return 1;
-        for (var i = 0; i < cfg.dealBars.length; i++) {
-          var db = cfg.dealBars[i];
-          if (db.id !== id) continue;
-          if (db.dealBarType === 'bxgy') return db.buyQuantity || 1;
-          return db.quantity || 1;
-        }
-        return 1;
-      }
-      function paint(txt) {
-        var ts = priceTargets();
-        for (var i = 0; i < ts.length; i++) { ts[i].textContent = txt; }
-      }
-      // Reject any transient Kaching shows while recalculating. When the selected
-      // bundle has more than one item, its total can never equal the single-unit
-      // price, so reject a reading equal to it. Also require two identical reads,
-      // so a value that is still changing is never painted.
-      var lastRead = null, stableCount = 0;
-      function trySync() {
-        if (!isLoaded()) return false;
-        var price = selectedPrice(); if (!price) { lastRead = null; stableCount = 0; return false; }
-        if (currentBarId == null) currentBarId = selectedBarId();
-
-        // Track how long the current DOM value has held (each read ~120ms apart).
-        if (price === lastRead) { stableCount++; } else { lastRead = price; stableCount = 1; }
-
-        var base = singleUnitAmt();
-        var paid = paidQtyById(currentBarId);
-        var val = amt(price);
-
-        // A multi-item bundle can never cost the single-unit price: reject it outright.
-        if (paid > 1 && !isNaN(base) && Math.abs(val - base) < 0.005) return false;
-
-        // Preferred: only paint the exact computed total (base x paid quantity),
-        // so no in-flight value can flash. Accept a different value only if it
-        // stays rock-stable (a genuinely discounted bundle we can't compute).
-        if (!isNaN(base) && paid >= 1) {
-          var expected = base * paid;
-          if (Math.abs(val - expected) < 0.005) { paint(price); return true; }
-          if (stableCount >= 6) { paint(price); return true; }
-          return false;
-        }
-
-        // No base available: require modest stability before painting.
-        if (stableCount >= 3) { paint(price); return true; }
-        return false;
-      }
-      // Poll for a window after each change so the settled price gets painted
-      // once Kaching finishes recalculating.
-      var pollIv = null;
-      function pollWindow(ms) {
-        if (pollIv) clearInterval(pollIv);
-        var start = Date.now();
-        pollIv = setInterval(function () {
-          trySync();
-          if (Date.now() - start > ms) { clearInterval(pollIv); pollIv = null; }
-        }, 120);
-      }
-      function init() {
-        var b = bars(); if (!b) return false;
-        currentBarId = selectedBarId();
-        pollWindow(3000);
-        document.addEventListener('change', function (e) {
-          if (!e.target) return;
-          if (e.target.name && e.target.name.indexOf('kaching-bundles-deal') === 0) {
-            currentBarId = e.target.value; // shopper picked a different bundle
-            pollWindow(3000);
-          } else if (e.target.closest && e.target.closest('kaching-bundle')) {
-            pollWindow(3000); // color/size change inside the widget
-          }
-        });
-        b.addEventListener('click', function () { pollWindow(3000); });
-        new MutationObserver(function () { pollWindow(2000); }).observe(b, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['class'] });
-        return true;
-      }
-      function boot() {
-        if (init()) return;
-        var n = 0, iv = setInterval(function () { if (init() || ++n > 40) clearInterval(iv); }, 400);
-      }
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', boot);
-      } else {
-        boot();
-      }
-    })();
-  </script>
 {%- endform -%}
