@@ -53,9 +53,9 @@ Supported variables
     {%- assign button_disabled = true -%}
   {%- elsif product.selected_or_first_available_variant.available -%}
     {%- if product.template_suffix contains 'pre-order' -%}
-      {%- capture button_content -%}<span class="atc-multiline"><span class="atc-multiline__main">{{ 'product.general.pre_order_button' | t }} - <span class="atc-multiline__price">{{ atc_price }}</span></span></span>{%- endcapture -%}
+      {%- capture button_content -%}<span class="atc-multiline"><span class="atc-multiline__main">{{ 'product.general.pre_order_button' | t }} - <span class="atc-multiline__price" data-base-price="{{ atc_price | strip_html | escape }}">{{ atc_price }}</span></span></span>{%- endcapture -%}
     {%- else -%}
-      {%- capture button_content -%}<span class="atc-multiline"><span class="atc-multiline__main">{{ 'product.general.add_to_cart_button' | t }} - <span class="atc-multiline__price">{{ atc_price }}</span></span><span class="atc-multiline__status">{{ atc_in_stock_text }}</span></span>{%- endcapture -%}
+      {%- capture button_content -%}<span class="atc-multiline"><span class="atc-multiline__main">{{ 'product.general.add_to_cart_button' | t }} - <span class="atc-multiline__price" data-base-price="{{ atc_price | strip_html | escape }}">{{ atc_price }}</span></span><span class="atc-multiline__status">{{ atc_in_stock_text }}</span></span>{%- endcapture -%}
     {%- endif -%}
   {%- else -%}
     {%- capture button_content -%}{{ 'product.general.sold_out_button' | t }}{%- endcapture -%}
@@ -152,8 +152,19 @@ Supported variables
       // so the button shows only the sale price (Comfrt-style, single price).
       var FULL_PRICE_SEL = '.kaching-bundles__bar-full-price,[data-a11y-label="system.original_price"]';
 
+      function norm(s) { return (s || '').replace(/\s+/g, ' ').trim(); }
+      // Parse a money string to a number (USD-style: comma = thousands). Lets
+      // "$35" and "$35.00" compare equal.
+      function amt(s) {
+        var m = norm(s).match(/[\d.,]+/);
+        return m ? parseFloat(m[0].replace(/,/g, '')) : NaN;
+      }
       function bars() {
         return document.querySelector('.kaching-bundles__bars') || document.querySelector('kaching-bundle');
+      }
+      function barList() {
+        var b = bars();
+        return b ? Array.prototype.slice.call(b.querySelectorAll('.kaching-bundles__bar')) : [];
       }
       function selectedBar() {
         var b = bars(); if (!b) return null;
@@ -163,6 +174,7 @@ Supported variables
         if (radio) return radio.closest('.kaching-bundles__bar') || b;
         return b.querySelector('.kaching-bundles__bar') || b;
       }
+      function selectedIndex() { return barList().indexOf(selectedBar()); }
       function selectedPrice() {
         var s = selectedBar() || bars(); if (!s) return '';
         var pe = s.querySelector(PRICE_SEL);
@@ -170,30 +182,48 @@ Supported variables
         var clone = pe.cloneNode(true);
         var full = clone.querySelectorAll(FULL_PRICE_SEL);
         for (var i = 0; i < full.length; i++) { full[i].parentNode.removeChild(full[i]); }
-        return (clone.textContent || '').replace(/\s+/g, ' ').trim();
+        return norm(clone.textContent);
       }
-      function sync() {
-        var txt = selectedPrice(); if (!txt) return;
-        var targets = document.querySelectorAll('.atc-multiline__price');
-        for (var i = 0; i < targets.length; i++) { targets[i].textContent = txt; }
+      function priceTargets() { return document.querySelectorAll('.atc-multiline__price'); }
+      function baseAmt() {
+        var t = priceTargets()[0];
+        return t ? amt(t.getAttribute('data-base-price')) : NaN;
       }
-      // Debounced: on a bundle/variant change Kaching briefly resets its price
-      // node to the 1-pc base price before settling on the bundle total. Waiting
-      // until the DOM stops changing means only the settled price is painted, so
-      // the button no longer flickers to the 1-pc price.
-      var syncTimer = null;
-      function scheduleSync(delay) {
-        clearTimeout(syncTimer);
-        syncTimer = setTimeout(sync, delay || 300);
+      function paint(txt) {
+        var ts = priceTargets();
+        for (var i = 0; i < ts.length; i++) { ts[i].textContent = txt; }
+      }
+      // Paint the selected price, but skip Kaching's transient 1-pc value.
+      // On a bundle/variant change Kaching holds the 1-pc base price for ~1-2s
+      // while it recalculates; that value equals the base variant price. So while
+      // any non-first bundle is selected, ignore a reading that matches the base
+      // price and wait for the settled bundle total. Returns true once painted.
+      function trySync() {
+        var price = selectedPrice(); if (!price) return false;
+        var base = baseAmt();
+        if (selectedIndex() !== 0 && !isNaN(base) && Math.abs(amt(price) - base) < 0.005) return false;
+        paint(price);
+        return true;
+      }
+      // Poll for a window after each change so the settled price gets painted
+      // once Kaching finishes recalculating.
+      var pollIv = null;
+      function pollWindow(ms) {
+        if (pollIv) clearInterval(pollIv);
+        var start = Date.now();
+        pollIv = setInterval(function () {
+          trySync();
+          if (Date.now() - start > ms) { clearInterval(pollIv); pollIv = null; }
+        }, 120);
       }
       function init() {
         var b = bars(); if (!b) return false;
-        sync();
+        trySync();
         document.addEventListener('change', function (e) {
-          if (e.target && e.target.name && e.target.name.indexOf('kaching-bundles-deal') === 0) scheduleSync(300);
+          if (e.target && e.target.name && e.target.name.indexOf('kaching-bundles-deal') === 0) pollWindow(3000);
         });
-        b.addEventListener('click', function () { scheduleSync(300); });
-        new MutationObserver(function () { scheduleSync(300); }).observe(b, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['class'] });
+        b.addEventListener('click', function () { pollWindow(3000); });
+        new MutationObserver(function () { pollWindow(2000); }).observe(b, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['class'] });
         return true;
       }
       function boot() {
