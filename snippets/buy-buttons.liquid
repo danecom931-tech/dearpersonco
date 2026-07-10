@@ -53,9 +53,9 @@ Supported variables
     {%- assign button_disabled = true -%}
   {%- elsif product.selected_or_first_available_variant.available -%}
     {%- if product.template_suffix contains 'pre-order' -%}
-      {%- capture button_content -%}<span class="atc-multiline"><span class="atc-multiline__main">{{ 'product.general.pre_order_button' | t }} - {{ atc_price }}</span></span>{%- endcapture -%}
+      {%- capture button_content -%}<span class="atc-multiline"><span class="atc-multiline__main">{{ 'product.general.pre_order_button' | t }} - <span class="atc-multiline__price">{{ atc_price }}</span></span></span>{%- endcapture -%}
     {%- else -%}
-      {%- capture button_content -%}<span class="atc-multiline"><span class="atc-multiline__main">{{ 'product.general.add_to_cart_button' | t }} - {{ atc_price }}</span><span class="atc-multiline__status">{{ atc_in_stock_text }}</span></span>{%- endcapture -%}
+      {%- capture button_content -%}<span class="atc-multiline"><span class="atc-multiline__main">{{ 'product.general.add_to_cart_button' | t }} - <span class="atc-multiline__price">{{ atc_price }}</span></span><span class="atc-multiline__status">{{ atc_in_stock_text }}</span></span>{%- endcapture -%}
     {%- endif -%}
   {%- else -%}
     {%- capture button_content -%}{{ 'product.general.sold_out_button' | t }}{%- endcapture -%}
@@ -135,4 +135,60 @@ Supported variables
       {%- endif -%}
     </buy-buttons>
   </div>
+
+  {%- comment -%}
+    Kaching Bundles bridge: mirror the selected bundle's price onto the ATC
+    button's `.atc-multiline__price`. Harmless if Kaching isn't on the page —
+    it simply leaves the variant price rendered above. Reads Kaching's own DOM
+    (`.kaching-bundles__bars` / `--selected` / `.kaching-bundles__bar-price`).
+  {%- endcomment -%}
+  <script>
+    (function () {
+      if (window.__dpcKachingAtcBridge) return;
+      window.__dpcKachingAtcBridge = true;
+
+      var PRICE_SEL = '.kaching-bundles__bar-price,[data-a11y-label="system.price"]';
+
+      function bars() {
+        return document.querySelector('.kaching-bundles__bars') || document.querySelector('kaching-bundle');
+      }
+      function selectedBar() {
+        var b = bars(); if (!b) return null;
+        var sel = b.querySelector('.kaching-bundles__bar--selected');
+        if (sel) return sel;
+        var radio = b.querySelector('input[type="radio"]:checked');
+        if (radio) return radio.closest('.kaching-bundles__bar') || b;
+        return b.querySelector('.kaching-bundles__bar') || b;
+      }
+      function selectedPrice() {
+        var s = selectedBar() || bars(); if (!s) return '';
+        var pe = s.querySelector(PRICE_SEL);
+        return pe ? (pe.textContent || '').trim() : '';
+      }
+      function sync() {
+        var txt = selectedPrice(); if (!txt) return;
+        var targets = document.querySelectorAll('.atc-multiline__price');
+        for (var i = 0; i < targets.length; i++) { targets[i].textContent = txt; }
+      }
+      function init() {
+        var b = bars(); if (!b) return false;
+        sync();
+        document.addEventListener('change', function (e) {
+          if (e.target && e.target.name && e.target.name.indexOf('kaching-bundles-deal') === 0) setTimeout(sync, 30);
+        });
+        b.addEventListener('click', function () { setTimeout(sync, 60); });
+        new MutationObserver(sync).observe(b, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['class'] });
+        return true;
+      }
+      function boot() {
+        if (init()) return;
+        var n = 0, iv = setInterval(function () { if (init() || ++n > 40) clearInterval(iv); }, 400);
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', boot);
+      } else {
+        boot();
+      }
+    })();
+  </script>
 {%- endform -%}
