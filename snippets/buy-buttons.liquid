@@ -148,6 +148,9 @@ Supported variables
       window.__dpcKachingAtcBridge = true;
 
       var PRICE_SEL = '.kaching-bundles__bar-price,[data-a11y-label="system.price"]';
+      // Kaching nests the struck-through full price inside the price node; strip it
+      // so the button shows only the sale price (Comfrt-style, single price).
+      var FULL_PRICE_SEL = '.kaching-bundles__bar-full-price,[data-a11y-label="system.original_price"]';
 
       function bars() {
         return document.querySelector('.kaching-bundles__bars') || document.querySelector('kaching-bundle');
@@ -163,7 +166,11 @@ Supported variables
       function selectedPrice() {
         var s = selectedBar() || bars(); if (!s) return '';
         var pe = s.querySelector(PRICE_SEL);
-        return pe ? (pe.textContent || '').trim() : '';
+        if (!pe) return '';
+        var clone = pe.cloneNode(true);
+        var full = clone.querySelectorAll(FULL_PRICE_SEL);
+        for (var i = 0; i < full.length; i++) { full[i].parentNode.removeChild(full[i]); }
+        return (clone.textContent || '').replace(/\s+/g, ' ').trim();
       }
       function sync() {
         var txt = selectedPrice(); if (!txt) return;
