@@ -260,10 +260,17 @@ Supported variables
       // while Kaching re-renders (morphs) the widget during recalculation, which
       // is exactly when the selected bar briefly loses its markers.
       var currentBarId = null;
-      function barQtyById(id) {
+      // Items the shopper actually pays for (bxgy: buyQuantity; quantity-break:
+      // quantity). Structural config, so it's reliable even though the config's
+      // price fields can be stale. Used to suppress the single-unit transient and
+      // to compute the expected total as base x paidQty.
+      function paidQtyById(id) {
         var cfg = dealConfig(); if (!cfg || !cfg.dealBars) return 1;
         for (var i = 0; i < cfg.dealBars.length; i++) {
-          if (cfg.dealBars[i].id === id) return barQty(cfg.dealBars[i]);
+          var db = cfg.dealBars[i];
+          if (db.id !== id) continue;
+          if (db.dealBarType === 'bxgy') return db.buyQuantity || 1;
+          return db.quantity || 1;
         }
         return 1;
       }
@@ -275,18 +282,35 @@ Supported variables
       // bundle has more than one item, its total can never equal the single-unit
       // price, so reject a reading equal to it. Also require two identical reads,
       // so a value that is still changing is never painted.
-      var lastRead = null;
+      var lastRead = null, stableCount = 0;
       function trySync() {
         if (!isLoaded()) return false;
-        var price = selectedPrice(); if (!price) { lastRead = null; return false; }
+        var price = selectedPrice(); if (!price) { lastRead = null; stableCount = 0; return false; }
         if (currentBarId == null) currentBarId = selectedBarId();
-        if (barQtyById(currentBarId) > 1) {
-          var one = singleUnitAmt();
-          if (!isNaN(one) && Math.abs(amt(price) - one) < 0.005) { lastRead = price; return false; }
+
+        // Track how long the current DOM value has held (each read ~120ms apart).
+        if (price === lastRead) { stableCount++; } else { lastRead = price; stableCount = 1; }
+
+        var base = singleUnitAmt();
+        var paid = paidQtyById(currentBarId);
+        var val = amt(price);
+
+        // A multi-item bundle can never cost the single-unit price: reject it outright.
+        if (paid > 1 && !isNaN(base) && Math.abs(val - base) < 0.005) return false;
+
+        // Preferred: only paint the exact computed total (base x paid quantity),
+        // so no in-flight value can flash. Accept a different value only if it
+        // stays rock-stable (a genuinely discounted bundle we can't compute).
+        if (!isNaN(base) && paid >= 1) {
+          var expected = base * paid;
+          if (Math.abs(val - expected) < 0.005) { paint(price); return true; }
+          if (stableCount >= 6) { paint(price); return true; }
+          return false;
         }
-        if (price !== lastRead) { lastRead = price; return false; }
-        paint(price);
-        return true;
+
+        // No base available: require modest stability before painting.
+        if (stableCount >= 3) { paint(price); return true; }
+        return false;
       }
       // Poll for a window after each change so the settled price gets painted
       // once Kaching finishes recalculating.
