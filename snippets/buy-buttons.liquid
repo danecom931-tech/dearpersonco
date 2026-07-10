@@ -177,14 +177,23 @@ Supported variables
         var targets = document.querySelectorAll('.atc-multiline__price');
         for (var i = 0; i < targets.length; i++) { targets[i].textContent = txt; }
       }
+      // Debounced: on a bundle/variant change Kaching briefly resets its price
+      // node to the 1-pc base price before settling on the bundle total. Waiting
+      // until the DOM stops changing means only the settled price is painted, so
+      // the button no longer flickers to the 1-pc price.
+      var syncTimer = null;
+      function scheduleSync(delay) {
+        clearTimeout(syncTimer);
+        syncTimer = setTimeout(sync, delay || 300);
+      }
       function init() {
         var b = bars(); if (!b) return false;
         sync();
         document.addEventListener('change', function (e) {
-          if (e.target && e.target.name && e.target.name.indexOf('kaching-bundles-deal') === 0) setTimeout(sync, 30);
+          if (e.target && e.target.name && e.target.name.indexOf('kaching-bundles-deal') === 0) scheduleSync(300);
         });
-        b.addEventListener('click', function () { setTimeout(sync, 60); });
-        new MutationObserver(sync).observe(b, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['class'] });
+        b.addEventListener('click', function () { scheduleSync(300); });
+        new MutationObserver(function () { scheduleSync(300); }).observe(b, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['class'] });
         return true;
       }
       function boot() {
