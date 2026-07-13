@@ -7,7 +7,7 @@
 /* Compact "Add" button */
 .upcart-upsells-module .upcart-upsells-button {
   width: auto !important;
-  padding: 8px 14px !important;
+  padding: 8px 12px !important;
   font-size: 12px !important;
   white-space: nowrap !important;
 }
@@ -21,11 +21,10 @@
 /* Tighten the space between the image and the text (lower = tighter) */
 .upcart-upsells-module .Stack__item--fill { margin-left: 6px !important; }
 
-/* Dropdown fills the row and the Add button sits at the far right.
-   (variationProduct / selectWrapper / inputWrapper are UpCart's own layout
-   classes for the dropdown + button row.) NOTE: only widths/flex are changed
-   here — no padding/height is added to the <select>, which is what blanked it
-   before. */
+/* Dropdown takes the row's free space; Add button sits at the far right.
+   IMPORTANT: we widen the dropdown WRAPPER and never set a width on the
+   <select> itself — a width:100% select collapses to blank inside this flex
+   row, which is what broke it before. */
 .upcart-upsells-module .styles_PreviewCarousel__variationProduct__ {
   display: flex !important;
   align-items: center !important;
@@ -33,4 +32,6 @@
 }
 .upcart-upsells-module .styles_PreviewCarousel__selectWrapper__ { flex: 1 1 auto !important; }
 .upcart-upsells-module .styles_PreviewCarousel__inputWrapper__ { flex: 0 0 auto !important; }
-.upcart-upsells-module .upcart-upsell-item-variant-selector { width: 100% !important; }
+
+/* Slightly smaller dropdown text so the full variant name fits */
+.upcart-upsells-module .upcart-upsell-item-variant-selector { font-size: 12px !important; }
