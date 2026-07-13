@@ -1,0 +1,75 @@
+/* ============================================================
+   DearPersonCo — Compact cart upsells (greenpomme-style)
+   Paste into: UpCart → Settings → Custom CSS
+   Targets UpCart's stable hooks (upcart-* classes + #up-upsell-carousel),
+   not the hashed styles_* classes, so it survives app updates.
+   ============================================================ */
+
+/* Tighten the spacing between upsell rows */
+#up-upsell-carousel { gap: 0 !important; }
+
+/* Flat rows instead of the big accent card — thin divider between items */
+.upcart-upsells-module .upcart-upsell-item-card {
+  background: transparent !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  padding: 12px 0 !important;
+}
+
+/* No divider under the last row */
+#up-upsell-carousel > span:last-child .upcart-upsell-item-card {
+  border-bottom: 0 !important;
+}
+
+/* Image | content row: compact and vertically centered */
+.upcart-upsells-module .Stack {
+  gap: 12px !important;
+  align-items: center !important;
+}
+
+/* Smaller thumbnail */
+.upcart-upsells-module .upcart-upsell-item-image-wrapper {
+  width: 72px !important;
+  min-width: 72px !important;
+  margin: 0 !important;
+}
+.upcart-upsells-module .upcart-upsell-item-image {
+  width: 72px !important;
+  height: auto !important;
+  border-radius: 6px !important;
+}
+
+/* Compact title */
+.upcart-upsells-module .upcart-upsell-item-title {
+  font-size: 14px !important;
+  line-height: 1.25 !important;
+  margin: 0 0 2px !important;
+}
+
+/* Keep your price style; just tighten its spacing */
+.upcart-upsells-module .upcart-upsell-item-price-row {
+  gap: 6px !important;
+  margin: 0 0 6px !important;
+}
+
+/* Dropdown + Add button: compact, side by side */
+.upcart-upsells-module form { margin-top: 4px !important; }
+.upcart-upsells-module .upcart-upsell-item-variant-selector {
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 6px 26px 6px 8px !important;
+  font-size: 12px !important;
+}
+.upcart-upsells-module .upcart-upsells-button {
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 8px 16px !important;
+  font-size: 12px !important;
+  white-space: nowrap !important;
+}
+
+/* Title above the list */
+.upcart-upsells-module .upcart-upsells-title { margin: 0 0 8px !important; }
