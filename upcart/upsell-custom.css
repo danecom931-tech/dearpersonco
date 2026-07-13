@@ -21,17 +21,21 @@
 /* Tighten the space between the image and the text (lower = tighter) */
 .upcart-upsells-module .Stack__item--fill { margin-left: 6px !important; }
 
-/* Dropdown takes the row's free space; Add button sits at the far right.
-   IMPORTANT: we widen the dropdown WRAPPER and never set a width on the
-   <select> itself — a width:100% select collapses to blank inside this flex
-   row, which is what broke it before. */
+/* Widen the dropdown and push the Add button to the far right.
+   The dropdown wrapper gets a DEFINITE width basis (62%) so UpCart's own
+   width:100% <select> resolves and shows its selected value. (A flex-auto
+   basis makes that 100% collapse to blank — that was the bug.)
+   If the selected name ever disappears again, delete these three rules to
+   return to UpCart's default row. */
 .upcart-upsells-module .styles_PreviewCarousel__variationProduct__ {
   display: flex !important;
   align-items: center !important;
-  gap: 8px !important;
 }
-.upcart-upsells-module .styles_PreviewCarousel__selectWrapper__ { flex: 1 1 auto !important; }
-.upcart-upsells-module .styles_PreviewCarousel__inputWrapper__ { flex: 0 0 auto !important; }
+.upcart-upsells-module .styles_PreviewCarousel__selectWrapper__ { flex: 0 1 62% !important; }
+.upcart-upsells-module .styles_PreviewCarousel__inputWrapper__ {
+  flex: 0 0 auto !important;
+  margin-left: auto !important;
+}
 
-/* Slightly smaller dropdown text so the full variant name fits */
+/* Smaller dropdown text so the full variant name fits */
 .upcart-upsells-module .upcart-upsell-item-variant-selector { font-size: 12px !important; }
