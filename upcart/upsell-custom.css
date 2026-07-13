@@ -18,5 +18,19 @@
   line-height: 1.25 !important;
 }
 
-/* Smaller gap between the image and the text (lower = tighter) */
-.upcart-upsells-module .Stack { gap: 4px !important; }
+/* Tighten the space between the image and the text (lower = tighter) */
+.upcart-upsells-module .Stack__item--fill { margin-left: 6px !important; }
+
+/* Dropdown fills the row and the Add button sits at the far right.
+   (variationProduct / selectWrapper / inputWrapper are UpCart's own layout
+   classes for the dropdown + button row.) NOTE: only widths/flex are changed
+   here — no padding/height is added to the <select>, which is what blanked it
+   before. */
+.upcart-upsells-module .styles_PreviewCarousel__variationProduct__ {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+.upcart-upsells-module .styles_PreviewCarousel__selectWrapper__ { flex: 1 1 auto !important; }
+.upcart-upsells-module .styles_PreviewCarousel__inputWrapper__ { flex: 0 0 auto !important; }
+.upcart-upsells-module .upcart-upsell-item-variant-selector { width: 100% !important; }
