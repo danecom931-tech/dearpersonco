@@ -4,16 +4,7 @@
    (Replaces any earlier upsell CSS block.)
    ============================================================ */
 
-/* 1) Smaller gap to the right of each product image */
-.upcart-upsells-module .Stack { gap: 10px !important; }
-
-/* 2) Smaller product title */
-.upcart-upsells-module .upcart-upsell-item-title {
-  font-size: 13px !important;
-  line-height: 1.25 !important;
-}
-
-/* 3) Compact "Add" button (Pomme-style) */
+/* Compact "Add" button */
 .upcart-upsells-module .upcart-upsells-button {
   width: auto !important;
   padding: 8px 14px !important;
@@ -21,13 +12,11 @@
   white-space: nowrap !important;
 }
 
-/* 4) Give the freed-up space to the variant dropdown so it reads clearly.
-      (selectWrapper/inputWrapper are UpCart's own layout classes for the
-      dropdown + button row.) */
-.upcart-upsells-module .styles_PreviewCarousel__selectWrapper__ { flex: 1 1 auto !important; }
-.upcart-upsells-module .styles_PreviewCarousel__inputWrapper__ { flex: 0 0 auto !important; }
-.upcart-upsells-module .upcart-upsell-item-variant-selector {
-  width: 100% !important;
-  font-size: 13px !important;
-  padding: 8px 28px 8px 10px !important;
+/* Smaller product title */
+.upcart-upsells-module h3.upcart-upsell-item-title {
+  font-size: 12px !important;
+  line-height: 1.25 !important;
 }
+
+/* Smaller gap between the image and the text (lower = tighter) */
+.upcart-upsells-module .Stack { gap: 4px !important; }
