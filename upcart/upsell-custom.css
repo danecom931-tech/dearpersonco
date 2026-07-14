@@ -33,3 +33,8 @@
   min-width: 150px !important;
   font-size: 12px !important;
 }
+
+/* Push the Add button to the far right (away from the dropdown) */
+.upcart-upsells-module .styles_PreviewCarousel__inputWrapper__ {
+  margin-left: auto !important;
+}
