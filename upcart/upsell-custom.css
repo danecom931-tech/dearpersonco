@@ -31,3 +31,20 @@
   min-width: 150px !important;
   font-size: 12px !important;
 }
+
+/* Mobile only: make the Add button the same height as the dropdown.
+   (Desktop already matches, so it's left alone.) Adjust 38px to taste. */
+@media (max-width: 768px) {
+  .upcart-upsells-module .upcart-upsell-item-variant-selector,
+  .upcart-upsells-module .upcart-upsells-button {
+    box-sizing: border-box !important;
+    height: 38px !important;
+    min-height: 38px !important;
+  }
+  .upcart-upsells-module .upcart-upsells-button {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    line-height: 36px !important;
+  }
+}
+
