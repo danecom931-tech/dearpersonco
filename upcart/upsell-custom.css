@@ -2,6 +2,10 @@
    DearPersonCo — cart upsell tweaks
    Paste into: UpCart → Settings → Custom CSS
    (Replaces any earlier upsell CSS block.)
+
+   NOTE: UpCart's layout classes (styles_PreviewCarousel__*) are build-hashed,
+   so they're matched by class-name SUBSTRING ([class*="..."]) rather than the
+   exact name, which may differ between builds.
    ============================================================ */
 
 /* Compact "Add" button */
@@ -21,11 +25,8 @@
 /* Tighten the space between the image and the text (lower = tighter) */
 .upcart-upsells-module .Stack__item--fill { margin-left: 6px !important; }
 
-/* Widen the dropdown using a fixed MIN-WIDTH (px, not %).
-   A percentage width collapses UpCart's select to blank; a px min-width can't.
-   The wider dropdown also pushes the Add button to the right.
-   Adjust 150px up/down to taste. To undo, delete these two rules. */
-.upcart-upsells-module .styles_PreviewCarousel__selectWrapper__ {
+/* Widen the dropdown using a fixed MIN-WIDTH (px, not %) so it can't collapse */
+.upcart-upsells-module [class*="selectWrapper"] {
   min-width: 150px !important;
   flex-shrink: 0 !important;
 }
@@ -34,13 +35,12 @@
   font-size: 12px !important;
 }
 
-/* Push the Add button to the far right (away from the dropdown).
-   Making the row a flex container is what lets the auto-margin work; the
-   dropdown's fixed min-width above keeps it from collapsing in the flex row. */
-.upcart-upsells-module .styles_PreviewCarousel__variationProduct__ {
+/* Make the dropdown+button row a flex row and push the Add button to the far
+   right. The dropdown's fixed min-width above keeps its value visible here. */
+.upcart-upsells-module [class*="variationProduct"] {
   display: flex !important;
   align-items: center !important;
 }
-.upcart-upsells-module .styles_PreviewCarousel__inputWrapper__ {
+.upcart-upsells-module [class*="inputWrapper"] {
   margin-left: auto !important;
 }
