@@ -32,6 +32,9 @@
   font-size: 12px !important;
 }
 
+/* Hide the discount / savings summary row in the cart footer */
+.upcart-savings-row { display: none !important; }
+
 /* Mobile only: make the Add button the same height as the dropdown.
    (Desktop already matches, so it's left alone.) Adjust 38px to taste. */
 @media (max-width: 768px) {
