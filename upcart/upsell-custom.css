@@ -2,18 +2,18 @@
    DearPersonCo — cart upsell tweaks
    Paste into: UpCart → Settings → Custom CSS
    (Replaces any earlier upsell CSS block.)
-
-   NOTE: UpCart's layout classes (styles_PreviewCarousel__*) are build-hashed,
-   so they're matched by class-name SUBSTRING ([class*="..."]) rather than the
-   exact name, which may differ between builds.
    ============================================================ */
 
-/* Compact "Add" button */
+/* Compact "Add" button, with a left gap so it isn't touching the dropdown.
+   (Spacing lives on the button's own stable class — the row wrapper classes
+   are build-hashed and don't reliably accept CSS. Increase margin-left to push
+   the button further right.) */
 .upcart-upsells-module .upcart-upsells-button {
   width: auto !important;
   padding: 8px 12px !important;
   font-size: 12px !important;
   white-space: nowrap !important;
+  margin-left: 16px !important;
 }
 
 /* Smaller product title */
@@ -25,22 +25,9 @@
 /* Tighten the space between the image and the text (lower = tighter) */
 .upcart-upsells-module .Stack__item--fill { margin-left: 6px !important; }
 
-/* Widen the dropdown using a fixed MIN-WIDTH (px, not %) so it can't collapse */
-.upcart-upsells-module [class*="selectWrapper"] {
-  min-width: 150px !important;
-  flex-shrink: 0 !important;
-}
+/* Widen the dropdown (fixed min-width, px, so it can't collapse) */
+.upcart-upsells-module [class*="selectWrapper"] { min-width: 150px !important; }
 .upcart-upsells-module .upcart-upsell-item-variant-selector {
   min-width: 150px !important;
   font-size: 12px !important;
-}
-
-/* Make the dropdown+button row a flex row and push the Add button to the far
-   right. The dropdown's fixed min-width above keeps its value visible here. */
-.upcart-upsells-module [class*="variationProduct"] {
-  display: flex !important;
-  align-items: center !important;
-}
-.upcart-upsells-module [class*="inputWrapper"] {
-  margin-left: auto !important;
 }
