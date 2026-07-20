@@ -11,53 +11,98 @@
    ============================================================ */
 
 @keyframes kbFreePulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(45, 106, 79, 0.35); }
-  50%      { box-shadow: 0 0 0 6px rgba(45, 106, 79, 0); }
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(45, 106, 79, 0.35);
+    }
+
+    50% {
+        box-shadow: 0 0 0 6px rgba(45, 106, 79, 0);
+    }
 }
 
 /* --- The free-shirt row: green dashed box + pulsing glow --- */
+/* padding is: top  right  bottom  left
+   The LEFT value moves the thumbnail + dropdowns horizontally:
+   lower = further left (line up with rows above), higher = further right.
+   The RIGHT value stays large so the "FREE" text has room. */
 .kaching-bundles__bar--selected .kaching-bundles__bar-variant-selector-wrapper:nth-child(4) {
-  position: relative;
-  background: #e3f4e8;                 /* fallback */
-  background: oklch(0.94 0.05 150);
-  border: 1.5px dashed #2d6a4f;
-  border-radius: 8px;
-  padding: 8px 12px;
-  margin-top: 6px;
-  overflow: visible;
-  animation: kbFreePulse 2.4s ease-in-out infinite;
+    position: relative;
+    background: #e3f4e8;
+    /* fallback */
+    background: oklch(0.94 0.05 150);
+    border: 2px dashed #2d6a4f;
+    border-radius: 4px;
+    padding: 4px 30px 4px 2px;
+    margin-top: 4px;
+    overflow: visible;
+    animation: kbFreePulse 2.4s ease-in-out infinite;
 }
 
 /* --- "FREE" badge pinned to the thumbnail's top-left corner --- */
 /* Anchored to the image's parent because <img> can't show ::before. */
 .kaching-bundles__bar--selected .kaching-bundles__bar-variant-selector-wrapper:nth-child(4) .kaching-bundles__bar-variant__content {
-  position: relative;
-  overflow: visible;
+    position: relative;
+    overflow: visible;
 }
+
 .kaching-bundles__bar--selected .kaching-bundles__bar-variant-selector-wrapper:nth-child(4) .kaching-bundles__bar-variant__content::before {
-  content: "FREE";
-  position: absolute;
-  top: -6px;
-  left: -6px;
-  z-index: 3;
-  background: #2d6a4f;
-  color: #fff;
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  padding: 3px 6px;
-  border-radius: 4px;
-  transform: rotate(-8deg);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
-  pointer-events: none;
+    content: "FREE";
+    position: absolute;
+    top: -6px;
+    left: -7px;
+    z-index: 3;
+    background: #2d6a4f;
+    color: #fff;
+    font-size: 7px;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    padding: 2px 4px;
+    border-radius: 3px;
+    transform: rotate(-15deg);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+    pointer-events: none;
 }
 
 /* --- Green borders on that row's Color + Size boxes --- */
 .kaching-bundles__bar--selected .kaching-bundles__bar-variant-selector-wrapper:nth-child(4) .kaching-bundles__bar-variant-select {
-  border-color: #2d6a4f !important;
+    border-color: #2d6a4f !important;
 }
 
-/* NOTE: the "$70 / FREE" price text was removed — the real widget is too
-   narrow to place it without overlapping the size dropdown, and the FREE
-   thumbnail badge already communicates the free shirt. */
+/* --- "$70  FREE" at the right edge of the row --- */
+/* Two pseudo-elements: strikethrough $70 can't share one element with FREE. */
+.kaching-bundles__bar--selected .kaching-bundles__bar-variant-selector-wrapper:nth-child(4)::after {
+    content: "FREE";
+    position: absolute;
+    right: .5px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 13px;
+    font-weight: 800;
+    color: #2d6a4f;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+.kaching-bundles__bar--selected .kaching-bundles__bar-variant-selector-wrapper:nth-child(4)::before {
+    content: "$70";
+    position: absolute;
+    right: 58px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 13px;
+    color: #8a8a8a;
+    text-decoration: line-through;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+/* --- Small screens: keep the pricing from colliding with the selects --- */
+@media (max-width: 600px) {
+    .kaching-bundles__bar--selected .kaching-bundles__bar-variant-selector-wrapper:nth-child(4)::before {
+        display: none;
+        /* hide the struck $70, keep "FREE" */
+    }
+}
