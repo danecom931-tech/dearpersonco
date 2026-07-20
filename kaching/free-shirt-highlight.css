@@ -58,36 +58,6 @@
   border-color: #2d6a4f !important;
 }
 
-/* --- "$70  FREE" at the right edge of the row --- */
-/* Two pseudo-elements: strikethrough $70 can't share one element with FREE. */
-.kaching-bundles__bar--selected .kaching-bundles__bar-variant-selector-wrapper:nth-child(4)::after {
-  content: "FREE";
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 15px;
-  font-weight: 800;
-  color: #2d6a4f;
-  white-space: nowrap;
-  pointer-events: none;
-}
-.kaching-bundles__bar--selected .kaching-bundles__bar-variant-selector-wrapper:nth-child(4)::before {
-  content: "$70";
-  position: absolute;
-  right: 58px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 13px;
-  color: #8a8a8a;
-  text-decoration: line-through;
-  white-space: nowrap;
-  pointer-events: none;
-}
-
-/* --- Small screens: keep the pricing from colliding with the selects --- */
-@media (max-width: 600px) {
-  .kaching-bundles__bar--selected .kaching-bundles__bar-variant-selector-wrapper:nth-child(4)::before {
-    display: none; /* hide the struck $70, keep "FREE" */
-  }
-}
+/* NOTE: the "$70 / FREE" price text was removed — the real widget is too
+   narrow to place it without overlapping the size dropdown, and the FREE
+   thumbnail badge already communicates the free shirt. */
