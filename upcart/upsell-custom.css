@@ -91,14 +91,15 @@
   background: #141414 !important;
 }
 
-/* The pink subtitle, injected under the title.
-   Edit the text in `content:` and the color to taste. */
-.upcart-upsells-module .upcart-upsells-header {
-  text-align: center !important;
-}
-.upcart-upsells-module .upcart-upsells-header::after {
+/* The pink subtitle, injected right under the title.
+   This attaches to whatever element DIRECTLY wraps the title, no
+   matter what its class is — so it works even though this UpCart
+   build has no `.upcart-upsells-header`. Edit the text in `content:`
+   and the color to taste. */
+.upcart-upsells-module :has(> .upcart-upsells-title)::after {
   content: "With today's special offers";
   display: block;
+  text-align: center;
   margin-top: 2px;
   font-size: 13px;
   font-weight: 600;
