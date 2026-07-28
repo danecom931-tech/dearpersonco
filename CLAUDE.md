@@ -18,6 +18,13 @@ This repository holds code for **DearPersonCo**, a Shopify store running the
   drawer link (red text + pill badge, e.g. "UP TO 50% OFF").
 - `snippets/navigation-panel.liquid` — renders the drawer/mega-menu links.
   Contains the Clearance-link detection + badge markup.
+- `upcart/upsell-custom.css` — custom CSS pasted into the UpCart app
+  (cart-drawer upsell tweaks + the Smooche-style "Complete your look" header).
+- `kaching/free-shirt-highlight.css` — custom CSS for the Kaching bundles app.
+- `checkout/order-reservation-timer/` — a Shopify **Checkout UI Extension**
+  (Plus-only) that shows a Smooche-style "Order reserved" countdown banner on
+  the checkout page. Deployed via the Shopify CLI, not the theme. See its
+  README for deploy steps.
 
 ## Notes
 

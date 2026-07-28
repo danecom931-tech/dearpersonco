@@ -1,0 +1,35 @@
+# Checkout UI extension: "Order reserved for the next M:SS" countdown banner.
+# Requires Shopify Plus (custom content on the main checkout page).
+#
+# Deploy: from the app root run `shopify app deploy`, then in the Shopify
+# admin go to Settings -> Checkout -> Customize, and add the
+# "Order reservation timer" app block where you want it (drag to the top
+# to match Smooche). Adjust the two settings below in that same editor.
+
+api_version = "2025-01"
+
+[[extensions]]
+name = "Order reservation timer"
+handle = "order-reservation-timer"
+type = "ui_extension"
+
+  [[extensions.targeting]]
+  module = "./src/Checkout.jsx"
+  target = "purchase.checkout.block.render"
+
+  # No network or Storefront API access needed — the timer is self-contained.
+  [extensions.capabilities]
+  network_access = false
+  block_progress = false
+
+  [extensions.settings]
+
+    [[extensions.settings.fields]]
+    key = "timer_minutes"
+    type = "number_integer"
+    name = "Countdown length (minutes)"
+
+    [[extensions.settings.fields]]
+    key = "message"
+    type = "single_line_text_field"
+    name = "Banner text (shown before the time)"
