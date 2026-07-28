@@ -51,3 +51,58 @@
   }
 }
 
+/* ============================================================
+   Smooche-style upsell header ("Complete your look")
+   ------------------------------------------------------------
+   In UpCart → Upsells settings, set the upsell TITLE text to:
+       Complete your look
+   The flanking lines and the pink subtitle below are drawn here
+   in CSS (UpCart has no subtitle field of its own).
+
+   NOTE ON SELECTORS: this targets UpCart's standard title class
+   `.upcart-upsells-title` and header wrapper `.upcart-upsells-header`.
+   If your build names them differently, the header just won't
+   restyle — inspect the drawer and swap the class, or tell me.
+   ============================================================ */
+
+/* The title itself: centered "Complete your look" with a thin
+   line on each side. */
+.upcart-upsells-module .upcart-upsells-title {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 14px !important;                 /* space between text and lines */
+  text-align: center !important;
+  margin: 0 0 4px !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.01em !important;
+  color: #141414 !important;            /* dark title text */
+  text-transform: none !important;
+}
+
+/* The two flanking lines. Change `background` for line color,
+   `height` for thickness. */
+.upcart-upsells-module .upcart-upsells-title::before,
+.upcart-upsells-module .upcart-upsells-title::after {
+  content: "" !important;
+  flex: 1 1 auto !important;
+  height: 1px !important;
+  background: #141414 !important;
+}
+
+/* The pink subtitle, injected under the title.
+   Edit the text in `content:` and the color to taste. */
+.upcart-upsells-module .upcart-upsells-header {
+  text-align: center !important;
+}
+.upcart-upsells-module .upcart-upsells-header::after {
+  content: "With today's special offers";
+  display: block;
+  margin-top: 2px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #d98a9a;                       /* rose subtitle */
+}
+
