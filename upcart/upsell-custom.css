@@ -91,16 +91,26 @@
   background: #141414 !important;
 }
 
+/* Give the header a little space before the first product card. */
+.upcart-upsells-module :has(> .upcart-upsells-title) {
+  margin-bottom: 12px !important;
+}
+
 /* The pink subtitle, injected right under the title.
    This attaches to whatever element DIRECTLY wraps the title, no
    matter what its class is — so it works even though this UpCart
-   build has no `.upcart-upsells-header`. Edit the text in `content:`
-   and the color to taste. */
+   build has no `.upcart-upsells-header`. The width/flex-basis/order
+   rules force it onto its own full-width, centered line below the
+   title even if that wrapper happens to be a flex row.
+   Edit the text in `content:` and the color to taste. */
 .upcart-upsells-module :has(> .upcart-upsells-title)::after {
   content: "With today's special offers";
   display: block;
+  width: 100%;
+  flex-basis: 100%;                     /* forces a new line in a flex row */
+  order: 99;                            /* keeps it after the title */
   text-align: center;
-  margin-top: 2px;
+  margin-top: 3px;
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.01em;
